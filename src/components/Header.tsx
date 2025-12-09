@@ -1,13 +1,13 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Database, Home, Menu, X } from 'lucide-react'
+import { Database, Home, LogOut, Menu, X } from 'lucide-react'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
-
+  const navigate = useNavigate()
   return (
     <>
-      <header className="p-4 flex items-center bg-gray-800 text-white shadow-lg">
+      <header className="p-4 flex items-center bg-gray-800 text-white shadow-lg sticky top-0 z-50">
         <button
           onClick={() => setIsOpen(true)}
           className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
@@ -24,6 +24,15 @@ export default function Header() {
             />
           </Link>
         </h1>
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={() => navigate({ to: '/login' })}
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
       </header>
 
       <aside

@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as PrivateRouteImport } from './routes/_private'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrivateIndexRouteImport } from './routes/_private/index'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as PrivateDrizzleRouteImport } from './routes/_private/drizzle'
+import { Route as PrivateDrizzleIndexRouteImport } from './routes/_private/drizzle/index'
 import { Route as PrivateCommentsTodoIdRouteImport } from './routes/_private/comments/$todoId'
 
 const PublicRoute = PublicRouteImport.update({
@@ -25,10 +25,10 @@ const PrivateRoute = PrivateRouteImport.update({
   id: '/_private',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const PrivateIndexRoute = PrivateIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PrivateRoute,
 } as any)
 const PublicRegisterRoute = PublicRegisterRouteImport.update({
   id: '/register',
@@ -40,9 +40,9 @@ const PublicLoginRoute = PublicLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => PublicRoute,
 } as any)
-const PrivateDrizzleRoute = PrivateDrizzleRouteImport.update({
-  id: '/drizzle',
-  path: '/drizzle',
+const PrivateDrizzleIndexRoute = PrivateDrizzleIndexRouteImport.update({
+  id: '/drizzle/',
+  path: '/drizzle/',
   getParentRoute: () => PrivateRoute,
 } as any)
 const PrivateCommentsTodoIdRoute = PrivateCommentsTodoIdRouteImport.update({
@@ -52,47 +52,46 @@ const PrivateCommentsTodoIdRoute = PrivateCommentsTodoIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/drizzle': typeof PrivateDrizzleRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/': typeof PrivateIndexRoute
   '/comments/$todoId': typeof PrivateCommentsTodoIdRoute
+  '/drizzle': typeof PrivateDrizzleIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/drizzle': typeof PrivateDrizzleRoute
   '/login': typeof PublicLoginRoute
   '/register': typeof PublicRegisterRoute
+  '/': typeof PrivateIndexRoute
   '/comments/$todoId': typeof PrivateCommentsTodoIdRoute
+  '/drizzle': typeof PrivateDrizzleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_private': typeof PrivateRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/_private/drizzle': typeof PrivateDrizzleRoute
   '/_public/login': typeof PublicLoginRoute
   '/_public/register': typeof PublicRegisterRoute
+  '/_private/': typeof PrivateIndexRoute
   '/_private/comments/$todoId': typeof PrivateCommentsTodoIdRoute
+  '/_private/drizzle/': typeof PrivateDrizzleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/drizzle' | '/login' | '/register' | '/comments/$todoId'
+  fullPaths: '/login' | '/register' | '/' | '/comments/$todoId' | '/drizzle'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/drizzle' | '/login' | '/register' | '/comments/$todoId'
+  to: '/login' | '/register' | '/' | '/comments/$todoId' | '/drizzle'
   id:
     | '__root__'
-    | '/'
     | '/_private'
     | '/_public'
-    | '/_private/drizzle'
     | '/_public/login'
     | '/_public/register'
+    | '/_private/'
     | '/_private/comments/$todoId'
+    | '/_private/drizzle/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   PrivateRoute: typeof PrivateRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
 }
@@ -113,12 +112,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_private/': {
+      id: '/_private/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof PrivateIndexRouteImport
+      parentRoute: typeof PrivateRoute
     }
     '/_public/register': {
       id: '/_public/register'
@@ -134,11 +133,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicLoginRouteImport
       parentRoute: typeof PublicRoute
     }
-    '/_private/drizzle': {
-      id: '/_private/drizzle'
+    '/_private/drizzle/': {
+      id: '/_private/drizzle/'
       path: '/drizzle'
       fullPath: '/drizzle'
-      preLoaderRoute: typeof PrivateDrizzleRouteImport
+      preLoaderRoute: typeof PrivateDrizzleIndexRouteImport
       parentRoute: typeof PrivateRoute
     }
     '/_private/comments/$todoId': {
@@ -152,13 +151,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface PrivateRouteChildren {
-  PrivateDrizzleRoute: typeof PrivateDrizzleRoute
+  PrivateIndexRoute: typeof PrivateIndexRoute
   PrivateCommentsTodoIdRoute: typeof PrivateCommentsTodoIdRoute
+  PrivateDrizzleIndexRoute: typeof PrivateDrizzleIndexRoute
 }
 
 const PrivateRouteChildren: PrivateRouteChildren = {
-  PrivateDrizzleRoute: PrivateDrizzleRoute,
+  PrivateIndexRoute: PrivateIndexRoute,
   PrivateCommentsTodoIdRoute: PrivateCommentsTodoIdRoute,
+  PrivateDrizzleIndexRoute: PrivateDrizzleIndexRoute,
 }
 
 const PrivateRouteWithChildren =
@@ -178,7 +179,6 @@ const PublicRouteWithChildren =
   PublicRoute._addFileChildren(PublicRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   PrivateRoute: PrivateRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
 }

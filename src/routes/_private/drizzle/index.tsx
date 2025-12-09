@@ -17,7 +17,7 @@ import {
 } from '@/api/todos/queries'
 import { getTodos } from '@/api/todos/server-fn'
 
-export const Route = createFileRoute('/_private/drizzle')({
+export const Route = createFileRoute('/_private/drizzle/')({
   component: DemoDrizzle,
   loader: async () => await getTodos(),
 })

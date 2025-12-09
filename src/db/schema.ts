@@ -1,5 +1,5 @@
 import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
+// import { relations } from 'drizzle-orm'
 
 export const todos = pgTable('todos', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -24,13 +24,13 @@ export const todoComments = pgTable('todo_comments', {
     .$onUpdate(() => new Date()),
 })
 
-export const todosRelations = relations(todos, ({ many }) => ({
-  comments: many(todoComments),
-}))
+// export const todosRelations = relations(todos, ({ many }) => ({
+//   comments: many(todoComments),
+// }))
 
-export const todoCommentsRelations = relations(todoComments, ({ one }) => ({
-  todo: one(todos, {
-    fields: [todoComments.todoId],
-    references: [todos.id],
-  }),
-}))
+// export const todoCommentsRelations = relations(todoComments, ({ one }) => ({
+//   todo: one(todos, {
+//     fields: [todoComments.todoId],
+//     references: [todos.id],
+//   }),
+// }))

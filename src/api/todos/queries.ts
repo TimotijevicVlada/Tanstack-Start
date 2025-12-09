@@ -6,7 +6,7 @@ import {
   getTodos,
   toggleComplete,
   updateTodo,
-} from '@/server-fn/todos'
+} from '@/api/todos/server-fn'
 
 export const useGetTodosQuery = () => {
   return useQuery({
