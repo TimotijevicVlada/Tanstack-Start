@@ -1,7 +1,7 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import type { LoginPayload, RegisterPayload } from './types'
-import { loginUser, registerUser } from '@/api/users/server-fn'
+import { getCurrentUser, loginUser, registerUser } from '@/api/users/server-fn'
 
 export const useLogin = (redirectTo?: string) => {
   const navigate = useNavigate()
@@ -45,6 +45,16 @@ export const useRegister = () => {
     },
     onError: (error) => {
       console.error('Registration failed:', error.message)
+    },
+  })
+}
+
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const currentUser = await getCurrentUser()
+      return currentUser
     },
   })
 }

@@ -1,8 +1,22 @@
 import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 // import { relations } from 'drizzle-orm'
 
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  username: text('username').notNull().unique(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+})
+
 export const todos = pgTable('todos', {
   id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   description: text('description').notNull().default(''),
   completed: boolean('completed').default(false),
@@ -18,17 +32,6 @@ export const todoComments = pgTable('todo_comments', {
     .notNull()
     .references(() => todos.id, { onDelete: 'cascade' }),
   content: text('content').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-})
-
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  username: text('username').notNull().unique(),
-  email: text('email').notNull().unique(),
-  passwordHash: text('password_hash').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at')
     .defaultNow()

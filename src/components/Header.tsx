@@ -2,11 +2,14 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Database, Home, LogOut, Menu, X } from 'lucide-react'
 import { logoutUser } from '@/api/users/server-fn'
+import { useCurrentUser } from '@/api/users/queries'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navigate = useNavigate()
+
+  const { data: currentUser } = useCurrentUser()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -45,6 +48,9 @@ export default function Header() {
           </Link>
         </h1>
         <div className="flex items-center gap-2 ml-auto">
+          <h3 className="bg-gray-700 px-2 py-1 rounded-lg font-bold">
+            {currentUser?.username}
+          </h3>
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}

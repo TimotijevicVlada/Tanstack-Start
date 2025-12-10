@@ -9,11 +9,17 @@ import type {
 } from '@/api/todos/types'
 import { db } from '@/db'
 import { todos } from '@/db/schema'
+import { requireAuth } from '@/lib/auth'
 
 export const getTodos = createServerFn({
   method: 'GET',
-}).handler(async () => {
+}).handler(async (ctx) => {
+  // Require authentication and get userId
+  const userId = requireAuth(ctx)
+
+  // Only return todos for the authenticated user
   return await db.query.todos.findMany({
+    where: eq(todos.userId, userId),
     orderBy: [asc(todos.createdAt)],
     // NOTE: if I want to include the comments:
     // with: {
@@ -26,20 +32,39 @@ export const getTodoById = createServerFn({
   method: 'GET',
 })
   .inputValidator((data: GetTodoByIdPayload) => data)
-  .handler(async ({ data }) => {
-    return await db.query.todos.findFirst({
-      where: eq(todos.id, data.id),
+  .handler(async (ctx) => {
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Only return todo if it belongs to the authenticated user
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, ctx.data.id),
     })
+
+    // Verify ownership
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
+
+    return todo
   })
 
 export const createTodo = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: CreateTodoPayload) => data)
-  .handler(async ({ data }) => {
+  .handler(async (ctx) => {
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Create todo associated with the authenticated user
     const [newTodo] = await db
       .insert(todos)
-      .values({ title: data.title, description: data.description })
+      .values({
+        userId,
+        title: ctx.data.title,
+        description: ctx.data.description,
+      })
       .returning()
     return newTodo
   })
@@ -48,10 +73,22 @@ export const deleteTodo = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: DeleteTodoPayload) => data)
-  .handler(async ({ data }) => {
+  .handler(async (ctx) => {
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before deleting
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, ctx.data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
+
     const [deletedTodo] = await db
       .delete(todos)
-      .where(eq(todos.id, data.id))
+      .where(eq(todos.id, ctx.data.id))
       .returning()
     return deletedTodo
   })
@@ -60,11 +97,23 @@ export const updateTodo = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: UpdateTodoPayload) => data)
-  .handler(async ({ data }) => {
+  .handler(async (ctx) => {
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before updating
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, ctx.data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
+
     const [updatedTodo] = await db
       .update(todos)
-      .set({ title: data.title, description: data.description })
-      .where(eq(todos.id, data.id))
+      .set({ title: ctx.data.title, description: ctx.data.description })
+      .where(eq(todos.id, ctx.data.id))
       .returning()
     return updatedTodo
   })
@@ -73,7 +122,20 @@ export const toggleComplete = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: ToggleCompletePayload) => data)
-  .handler(async ({ data }) => {
+  .handler(async (ctx) => {
+    const { data } = ctx
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before updating
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
+
     const [updatedTodo] = await db
       .update(todos)
       .set({ completed: !data.completed })
