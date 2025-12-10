@@ -14,10 +14,12 @@ import { requireAuth } from '@/lib/auth'
 export const getTodos = createServerFn({
   method: 'GET',
 }).handler(async (ctx) => {
-  // Require authentication
-  requireAuth(ctx)
+  // Require authentication and get userId
+  const userId = requireAuth(ctx)
 
+  // Only return todos for the authenticated user
   return await db.query.todos.findMany({
+    where: eq(todos.userId, userId),
     orderBy: [asc(todos.createdAt)],
     // NOTE: if I want to include the comments:
     // with: {
@@ -31,12 +33,20 @@ export const getTodoById = createServerFn({
 })
   .inputValidator((data: GetTodoByIdPayload) => data)
   .handler(async (ctx) => {
-    // Require authentication
-    requireAuth(ctx)
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
 
-    return await db.query.todos.findFirst({
+    // Only return todo if it belongs to the authenticated user
+    const todo = await db.query.todos.findFirst({
       where: eq(todos.id, ctx.data.id),
     })
+
+    // Verify ownership
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
+
+    return todo
   })
 
 export const createTodo = createServerFn({
@@ -44,12 +54,17 @@ export const createTodo = createServerFn({
 })
   .inputValidator((data: CreateTodoPayload) => data)
   .handler(async (ctx) => {
-    // Require authentication
-    requireAuth(ctx)
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
 
+    // Create todo associated with the authenticated user
     const [newTodo] = await db
       .insert(todos)
-      .values({ title: ctx.data.title, description: ctx.data.description })
+      .values({
+        userId,
+        title: ctx.data.title,
+        description: ctx.data.description,
+      })
       .returning()
     return newTodo
   })
@@ -59,8 +74,17 @@ export const deleteTodo = createServerFn({
 })
   .inputValidator((data: DeleteTodoPayload) => data)
   .handler(async (ctx) => {
-    // Require authentication
-    requireAuth(ctx)
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before deleting
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, ctx.data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
 
     const [deletedTodo] = await db
       .delete(todos)
@@ -74,8 +98,17 @@ export const updateTodo = createServerFn({
 })
   .inputValidator((data: UpdateTodoPayload) => data)
   .handler(async (ctx) => {
-    // Require authentication
-    requireAuth(ctx)
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before updating
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, ctx.data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
 
     const [updatedTodo] = await db
       .update(todos)
@@ -90,13 +123,23 @@ export const toggleComplete = createServerFn({
 })
   .inputValidator((data: ToggleCompletePayload) => data)
   .handler(async (ctx) => {
-    // Require authentication
-    requireAuth(ctx)
+    const { data } = ctx
+    // Require authentication and get userId
+    const userId = requireAuth(ctx)
+
+    // Verify ownership before updating
+    const todo = await db.query.todos.findFirst({
+      where: eq(todos.id, data.id),
+    })
+
+    if (!todo || todo.userId !== userId) {
+      throw new Error('Todo not found or access denied')
+    }
 
     const [updatedTodo] = await db
       .update(todos)
-      .set({ completed: !ctx.data.completed })
-      .where(eq(todos.id, ctx.data.id))
+      .set({ completed: !data.completed })
+      .where(eq(todos.id, data.id))
       .returning()
     return updatedTodo
   })

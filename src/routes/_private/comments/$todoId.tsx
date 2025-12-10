@@ -61,7 +61,7 @@ function RouteComponent() {
             <ChevronLeft className="w-6 h-6" />
             <h1 className="text-xl font-bold">Comments</h1>
           </div>
-          <h1 className="text-xl font-bold">{todo?.title}</h1>
+          <h1 className="text-xl font-bold">{todo.title}</h1>
         </div>
         <form onSubmit={handleSubmit} className="flex gap-2 my-4">
           <input
