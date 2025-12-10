@@ -8,7 +8,9 @@ import {
   Zap,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute('/_private/')({
+  component: App,
+})
 
 function App() {
   const features = [
@@ -88,7 +90,7 @@ function App() {
             <p className="text-gray-400 text-sm mt-2">
               Begin your TanStack Start journey by editing{' '}
               <code className="px-2 py-1 bg-slate-700 rounded text-cyan-400">
-                /src/routes/index.tsx
+                /src/routes/_private/index.tsx
               </code>
             </p>
           </div>
